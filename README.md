@@ -48,12 +48,12 @@ All metrics are quantitatively measured and verified via `run_benchmarks.py` ins
 
 | Mechanistic Property | Target Component | Empirical Metric | Baseline / Comparison | Significance |
 | :--- | :--- | :--- | :--- | :--- |
-| **Targeted Activation Patching** | L0H7 $\to$ L1H4 | **$0.5659 \to 0.0030$** ($\Delta -0.5629$) | Non-circuit heads: $\|\Delta\| < 0.03$ | **$99.47\%$ collapse** in induction score; proves causal dependency |
+| **Targeted Activation Patching** | L0H7 $\to$ L1H4 | **$0.5659 \to 0.0030$** ($\Delta -0.5629$) | Non-circuit heads: $\|\Delta\| < 0.03$ | **99.47% collapse** in induction score; proves causal dependency |
 | **Causal NLL Loss Surge** | L0H7 (Layer 0) | **$+8.112$** NLL loss surge | 18 of 24 heads have $<0.5$ delta | **Rank #1 of 24 heads**; functional necessity on repeated tokens |
 | **Induction Loss Surge** | L1H10 / L1H4 (Layer 1) | **$+5.604$** (L1H10), **$+2.030$** (L1H4) | Ranked #2 and #4 across all 24 heads | Proves functional necessity of Layer-1 induction heads |
-| **Bilinear QK Decomposition** | $Q[\text{token\_embed}] \cdot K[\text{L0H7}]$ | **$+5.757$** of $+6.775$ total dot-product | $0.00 \times 10^0$ reconstruction error | Accounts for **$85.0\%$ of total induction attention mass** |
-| **Low-Rank K-Composition** | L0H7 $\to$ L1H4 / L1H10 | **$0.11210$** (L1H4), **$0.11195$** (L1H10) | Random baseline: $1/\sqrt{d_{model}} = 0.0361$ | **$3.11\times$ above random baseline**; ranked #1 & #2 out of 144 pairs |
-| **Weight-Level QK Circuit** | L0H7 | **$99.78\%$** mean attention on $\text{diag}(-1)$ | Associative error $< 6.1 \times 10^{-4}$ | Pure positional QK circuit ($W_{pos} W_{QK} W_{pos}^T$) over 2,048 tokens |
+| **Bilinear QK Decomposition** | $Q[\text{token-embed}] \cdot K[\text{L0H7}]$ | **$+5.757$** of $+6.775$ total dot-product | $0.00 \times 10^0$ reconstruction error | Accounts for **85.0% of total induction attention mass** |
+| **Low-Rank K-Composition** | L0H7 $\to$ L1H4 / L1H10 | **$0.11210$** (L1H4), **$0.11195$** (L1H10) | Random baseline: $1/\sqrt{d_{model}} = 0.0361$ | **3.11× above random baseline**; ranked #1 & #2 out of 144 pairs |
+| **Weight-Level QK Circuit** | L0H7 | **99.78%** mean attention on $\text{diag}(-1)$ | Associative error $< 6.1 \times 10^{-4}$ | Pure positional QK circuit ($W_{pos} W_{QK} W_{pos}^T$) over 2,048 tokens |
 
 ---
 
@@ -62,18 +62,18 @@ All metrics are quantitatively measured and verified via `run_benchmarks.py` ins
 ### 1. Weight-Level Positional QK Circuit
 In Shortformer positional embedding architectures, positional encodings are added directly to Q and K inputs. For Layer 0, the position-to-position attention score before softmax is:
 $$\text{Scores}_{pos} = W_{pos} (W_Q W_K^T) W_{pos}^T$$
-Applying causal masking and scaling by $1/\sqrt{d_{head}}$ reveals that head **L0H7** places **$99.78\%$** of its attention probability mass strictly on the previous position ($\text{diag}(-1)$) across the entire 2,048-token context window.
+Applying causal masking and scaling by $1/\sqrt{d_{head}}$ reveals that head **L0H7** places **99.78%** of its attention probability mass strictly on the previous position ($\text{diag}(-1)$) across the entire 2,048-token context window.
 
 ### 2. Targeted Activation Patching (Inter-Head Causality)
 To test whether head L0H7’s output is causally required for head L1H4’s induction behavior, we intervene at inference time using forward hooks on 50-token prefix repetitions ($[BOS, X_{1..50}, X_{1..50}]$):
 * We attach a zero-ablation hook to layer 0’s value projection (`blocks.0.attn.hook_v`) targeted at head index $h$.
 * We record head L1H4’s mean attention on the induction offset stripe (`blocks.1.attn.hook_pattern`).
-* **Result:** Zeroing L0H7 causes L1H4’s induction score to plummet from **$0.56594 \to 0.00302$ ($99.47\%$ reduction)**, whereas ablating all other layer-0 heads yields negligible changes ($|\Delta| < 0.03$).
+* **Result:** Zeroing L0H7 causes L1H4’s induction score to plummet from **$0.56594 \to 0.00302$ (99.47% reduction)**, whereas ablating all other layer-0 heads yields negligible changes ($|\Delta| < 0.03$).
 
 ### 3. Bilinear Pre-Softmax QK Tensor Decomposition
 For target head L1H4, the pre-softmax attention score between query position $q$ and key position $k$ is bilinear:
 $$\text{Score}[q, k] = \frac{q[q] \cdot k[k]}{\sqrt{d_{head}}} = \sum_{i=1}^{16} \sum_{j=1}^{16} \frac{q_i[q] \cdot k_j[k]}{\sqrt{d_{head}}}$$
-Where $q_i$ and $k_j$ decompose into 16 distinct residual/positional components (token embedding, positional embedding, 12 layer-0 heads, layer-0 output bias, and projection biases). Summing all 256 component pairs reconstructs the unmasked pre-softmax score matrix with exact machine precision ($0.00 \times 10^0$ error). The single interaction $Q[\text{token\_embed}] \cdot K[\text{L0H7}]$ accounts for **$85.0\%$** of the total induction score.
+Where $q_i$ and $k_j$ decompose into 16 distinct residual/positional components (token embedding, positional embedding, 12 layer-0 heads, layer-0 output bias, and projection biases). Summing all 256 component pairs reconstructs the unmasked pre-softmax score matrix with exact machine precision ($0.00 \times 10^0$ error). The single interaction $Q[\text{token-embed}] \cdot K[\text{L0H7}]$ accounts for **85.0%** of the total induction score.
 
 ### 4. Low-Rank Frobenius K-Composition via Gram Matrices
 K-composition measures how strongly an earlier head $A$’s output aligns with a later head $B$’s key projection:
@@ -81,7 +81,7 @@ $$\text{comp}(A, B) = \frac{\| W_{OV}^A (W_{QK}^B)^T \|_F}{\| W_{OV}^A \|_F \| W
 To evaluate all 144 pairs $(A \in \text{Layer 0}, B \in \text{Layer 1})$ efficiently on CPU without materializing large $768 \times 768$ dense matrices, we compute Frobenius norms using $d_{head} \times d_{head}$ ($64 \times 64$) Gram matrices:
 $$\| V O \|_F^2 = \text{Tr}((V^T V)(O O^T)), \quad \| Q K^T \|_F^2 = \text{Tr}((Q^T Q)(K^T K))$$
 $$\| (V O)(Q K^T)^T \|_F^2 = \text{Tr}((L^T L)(Q^T Q)), \quad \text{where } L = V (O K)$$
-Against a random baseline of $1/\sqrt{d_{model}} = 0.0361$, the pairs **L0H7 $\to$ L1H4 ($0.11210$)** and **L0H7 $\to$ L1H10 ($0.11195$)** rank #1 and #2 overall (**$3.11\times$ random baseline**).
+Against a random baseline of $1/\sqrt{d_{model}} = 0.0361$, the pairs **L0H7 $\to$ L1H4 ($0.11210$)** and **L0H7 $\to$ L1H10 ($0.11195$)** rank #1 and #2 overall (**3.11× above random baseline**).
 
 ---
 
@@ -112,8 +112,8 @@ Against a random baseline of $1/\sqrt{d_{model}} = 0.0361$, the pairs **L0H7 $\t
 
 ### 1. Environment Setup
 ```bash
-git clone https://github.com/PranavBansal7/transformer-circuits-interpretability.git
-cd transformer-circuits-interpretability
+git clone https://github.com/PranavBansal7/transformer-circuits.git
+cd transformer-circuits
 
 conda create -n arena-env python=3.11 -y
 conda activate arena-env
