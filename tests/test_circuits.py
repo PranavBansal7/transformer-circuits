@@ -1,46 +1,28 @@
 """
 Unit and Synthetic Regression Tests for Transformer Circuits Pipeline.
 Verifies mathematical soundness and numerical precision of:
-1. Low-rank K-composition Gram matrix computations
-2. Bilinear pre-softmax QK component decomposition
-3. Targeted activation patching hooks
-4. Low-rank OV operator eigenvalue-based copying score
+1. Low-rank K-composition Gram matrix computations vs direct Frobenius norms
+2. Pre-softmax QK component-level tensor decomposition and reconstruction
+3. Targeted activation patching hooks (value zero-ablation)
+4. Induction stripe diagonal offset indexing
 """
 
 import math
 import torch as t
 import pytest
 
-from arena_1_2_transformerlens_10b_copying_eigenvalue_score import (
-    copying_score_from_operator,
-)
-from arena_1_2_transformerlens_18_targeted_ablation import (
+from targeted_activation_patching import (
     value_ablation_hook,
     induction_pattern_score_hook,
 )
-from arena_1_2_transformerlens_19_qk_component_decomposition import (
+from qk_component_decomposition import (
     pairwise_qk_score_contributions,
     sum_pairwise_scores,
 )
-from arena_1_2_transformerlens_20_canonical_k_composition import (
+from low_rank_k_composition import (
     k_composition_score,
     direct_k_composition_score,
 )
-
-
-def test_copying_eigenvalue_extremes():
-    """Verify that pure positive, pure negative, and balanced operators yield exact scores."""
-    # All positive eigenvalues -> +1.0
-    pos_mat = t.diag(t.tensor([1.0, 2.0, 3.0]))
-    assert abs(copying_score_from_operator(pos_mat) - 1.0) < 1e-6
-
-    # All negative eigenvalues -> -1.0
-    neg_mat = t.diag(t.tensor([-1.0, -2.0, -3.0]))
-    assert abs(copying_score_from_operator(neg_mat) - (-1.0)) < 1e-6
-
-    # Balanced -> ~0.0
-    balanced_mat = t.diag(t.tensor([1.0, -1.0, 2.0, -2.0]))
-    assert abs(copying_score_from_operator(balanced_mat)) < 1e-6
 
 
 def test_k_composition_low_rank_vs_direct():

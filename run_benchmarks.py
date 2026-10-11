@@ -34,7 +34,7 @@ def print_banner(title: str) -> None:
 
 def benchmark_k_composition() -> dict:
     print_banner("1. LOW-RANK K-COMPOSITION CIRCUIT ANALYSIS")
-    from arena_1_2_transformerlens_20_canonical_k_composition import (
+    from low_rank_k_composition import (
         load_canonical_model,
         extract_head_weights,
         k_composition_score,
@@ -69,7 +69,7 @@ def benchmark_k_composition() -> dict:
 
 def benchmark_targeted_ablation() -> dict:
     print_banner("2. TARGETED CAUSAL ABLATION (L0H7 -> L1H4)")
-    from arena_1_2_transformerlens_18_targeted_ablation import (
+    from targeted_activation_patching import (
         load_canonical_model,
         generate_repeated_tokens,
         ablation_induction_score,
@@ -100,7 +100,7 @@ def benchmark_targeted_ablation() -> dict:
 
 def benchmark_qk_decomposition() -> dict:
     print_banner("3. PRE-SOFTMAX QK COMPONENT BILINEAR DECOMPOSITION")
-    from arena_1_2_transformerlens_19_qk_component_decomposition import (
+    from qk_component_decomposition import (
         load_canonical_model,
         generate_repeated_tokens,
         build_qk_components,

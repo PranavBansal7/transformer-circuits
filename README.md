@@ -97,13 +97,13 @@ Against a random baseline of $1/\sqrt{d_{model}} = 0.0361$, the pairs **L0H7 $\t
 ├── tests/
 │   └── test_circuits.py                            # Pytest suite verifying synthetic & numerical tests
 │
-├── arena_1_2_transformerlens_14_qk_prev_token_circuit_fixed.py    # Weight-level positional QK circuit
-├── arena_1_2_transformerlens_15_canonical_induction_patterns.py   # Induction attention visualizer
-├── arena_1_2_transformerlens_16_canonical_induction_ablation.py   # 24-head causal zero-ablation scan
-├── arena_1_2_transformerlens_17_canonical_mean_ablation.py        # Mean activation ablation
-├── arena_1_2_transformerlens_18_targeted_ablation.py              # Targeted activation patching (L0H7 -> L1H4)
-├── arena_1_2_transformerlens_19_qk_component_decomposition.py     # 256-pair bilinear QK decomposition
-└── arena_1_2_transformerlens_20_canonical_k_composition.py        # Low-rank Gram matrix K-composition
+├── qk_previous_token_circuit.py                    # Weight-level positional QK circuit
+├── induction_attention_patterns.py                 # Induction attention visualizer
+├── causal_head_zero_ablation.py                    # 24-head causal zero-ablation scan
+├── causal_head_mean_ablation.py                    # Mean activation ablation
+├── targeted_activation_patching.py                 # Targeted activation patching (L0H7 -> L1H4)
+├── qk_component_decomposition.py                   # 256-pair QK component tensor decomposition
+└── low_rank_k_composition.py                       # Low-rank Gram matrix K-composition
 ```
 
 ---
