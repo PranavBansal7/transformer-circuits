@@ -6,9 +6,9 @@
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An end-to-end mechanistic interpretability research suite reverse-engineering **in-context learning (ICL)** and **induction circuits** in an **80M-parameter, 2-layer attention-only Transformer** from first principles.
+An end-to-end mechanistic interpretability research suite reverse-engineering **induction circuits** and attention sub-networks in an **80M-parameter, 2-layer attention-only Transformer** from first principles.
 
-Replicating the foundational mathematical framework introduced by Anthropic ([Elhage et al., 2021](https://transformer-circuits.pub/2021/framework/index.html); [Olsson et al., 2022](https://transformer-circuits.pub/2022/in-context-heads/index.html)), this repository reverse-engineers the circuit mechanics driving prefix-repetition and in-context copying via **weight-level linear algebra**, **causal activation patching**, **bilinear pre-softmax QK tensor decomposition**, and **full-network causal ablation scans**.
+Replicating the foundational mathematical framework introduced by Anthropic ([Elhage et al., 2021](https://transformer-circuits.pub/2021/framework/index.html); [Olsson et al., 2022](https://transformer-circuits.pub/2022/in-context-heads/index.html)), this repository reverse-engineers the circuit mechanics driving prefix-repetition and copying via **weight-level linear algebra**, **causal activation patching**, **pre-softmax QK tensor decomposition**, and **full-network causal ablation scans**.
 
 ---
 
