@@ -61,8 +61,12 @@ All metrics are quantitatively measured and verified via `run_benchmarks.py` ins
 
 ### 1. Weight-Level Positional QK Circuit
 In Shortformer positional embedding architectures, positional encodings are added directly to Q and K inputs. For Layer 0, the position-to-position attention score before softmax is:
-$$\text{Scores}_{pos} = W_{pos} (W_Q W_K^T) W_{pos}^T$$
-Applying causal masking and scaling by $1/\sqrt{d_{head}}$ reveals that head **L0H7** places **99.78%** of its attention probability mass strictly on the previous position ($\text{diag}(-1)$) across the entire 2,048-token context window.
+
+$$
+\text{Scores}_{pos} = W_{pos} (W_Q W_K^T) W_{pos}^T
+$$
+
+Applying causal masking and scaling by $1/\sqrt{d_{\text{head}}}$ reveals that head **L0H7** places **99.78%** of its attention probability mass strictly on the previous position ($\text{diag}(-1)$) across the entire 2,048-token context window.
 
 ### 2. Targeted Activation Patching (Inter-Head Causality)
 To test whether head L0H7’s output is causally required for head L1H4’s induction behavior, we intervene at inference time using forward hooks on 50-token prefix repetitions ($[BOS, X_{1..50}, X_{1..50}]$):
@@ -72,16 +76,31 @@ To test whether head L0H7’s output is causally required for head L1H4’s indu
 
 ### 3. Bilinear Pre-Softmax QK Tensor Decomposition
 For target head L1H4, the pre-softmax attention score between query position $q$ and key position $k$ is bilinear:
-$$\text{Score}[q, k] = \frac{q[q] \cdot k[k]}{\sqrt{d_{head}}} = \sum_{i=1}^{16} \sum_{j=1}^{16} \frac{q_i[q] \cdot k_j[k]}{\sqrt{d_{head}}}$$
+
+$$
+\text{Score}[q, k] = \frac{q[q] \cdot k[k]}{\sqrt{d_{\text{head}}}} = \sum_{i=1}^{16} \sum_{j=1}^{16} \frac{q_i[q] \cdot k_j[k]}{\sqrt{d_{\text{head}}}}
+$$
+
 Where $q_i$ and $k_j$ decompose into 16 distinct residual/positional components (token embedding, positional embedding, 12 layer-0 heads, layer-0 output bias, and projection biases). Summing all 256 component pairs reconstructs the unmasked pre-softmax score matrix with exact machine precision ($0.00 \times 10^0$ error). The single interaction $Q[\text{token-embed}] \cdot K[\text{L0H7}]$ accounts for **85.0%** of the total induction score.
 
 ### 4. Low-Rank Frobenius K-Composition via Gram Matrices
 K-composition measures how strongly an earlier head $A$’s output aligns with a later head $B$’s key projection:
-$$\text{comp}(A, B) = \frac{\| W_{OV}^A (W_{QK}^B)^T \|_F}{\| W_{OV}^A \|_F \| W_{QK}^B \|_F}$$
-To evaluate all 144 pairs $(A \in \text{Layer 0}, B \in \text{Layer 1})$ efficiently on CPU without materializing large $768 \times 768$ dense matrices, we compute Frobenius norms using $d_{head} \times d_{head}$ ($64 \times 64$) Gram matrices:
-$$\| V O \|_F^2 = \text{Tr}((V^T V)(O O^T)), \quad \| Q K^T \|_F^2 = \text{Tr}((Q^T Q)(K^T K))$$
-$$\| (V O)(Q K^T)^T \|_F^2 = \text{Tr}((L^T L)(Q^T Q)), \quad \text{where } L = V (O K)$$
-Against a random baseline of $1/\sqrt{d_{model}} = 0.0361$, the pairs **L0H7 $\to$ L1H4 ($0.11210$)** and **L0H7 $\to$ L1H10 ($0.11195$)** rank #1 and #2 overall (**3.11× above random baseline**).
+
+$$
+\text{comp}(A, B) = \frac{\| W_{OV}^A (W_{QK}^B)^T \|_F}{\| W_{OV}^A \|_F \| W_{QK}^B \|_F}
+$$
+
+To evaluate all 144 pairs $(A \in \text{Layer 0}, B \in \text{Layer 1})$ efficiently on CPU without materializing large $768 \times 768$ dense matrices, we compute Frobenius norms using $d_{\text{head}} \times d_{\text{head}}$ ($64 \times 64$) Gram matrices:
+
+$$
+\| V O \|_F^2 = \text{Tr}((V^T V)(O O^T)), \quad \| Q K^T \|_F^2 = \text{Tr}((Q^T Q)(K^T K))
+$$
+
+$$
+\| (V O)(Q K^T)^T \|_F^2 = \text{Tr}((L^T L)(Q^T Q)), \quad \text{where } L = V (O K)
+$$
+
+Against a random baseline of $1/\sqrt{d_{\text{model}}} = 0.0361$, the pairs **L0H7 $\to$ L1H4 ($0.11210$)** and **L0H7 $\to$ L1H10 ($0.11195$)** rank #1 and #2 overall (**3.11× above random baseline**).
 
 ---
 
