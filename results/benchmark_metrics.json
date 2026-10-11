@@ -1,0 +1,21 @@
+{
+  "k_composition": {
+    "random_baseline": 0.036084391824351615,
+    "L0H7_L1H4": 0.11210457235574722,
+    "L0H7_L1H10": 0.11194834113121033,
+    "multiplier_L1H4": 3.1067330412949694,
+    "multiplier_L1H10": 3.1024034345969436
+  },
+  "targeted_ablation": {
+    "baseline_induction_score": 0.5659382343292236,
+    "ablated_induction_score": 0.003023883095011115,
+    "delta": -0.5629143512342125,
+    "relative_drop_pct": 99.46568672841212
+  },
+  "qk_decomposition": {
+    "total_stripe_score": 6.774996757507324,
+    "token_embed_L0H7_score": 5.757022380828857,
+    "fraction_of_total_pct": 84.97454075457,
+    "reconstruction_error": 0.0
+  }
+}
